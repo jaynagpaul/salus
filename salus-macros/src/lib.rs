@@ -1,8 +1,7 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
+use proc_macro::TokenStream;
+
+mod route;
+
+fn route(attr: TokenStream, item: TokenStream) -> TokenStream {
+    route::internal_route(attr, item)
 }

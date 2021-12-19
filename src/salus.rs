@@ -5,10 +5,14 @@ use hyper::{
     Body, Request, Response, Server,
 };
 
-use crate::{Handler, Route};
+use crate::{
+    handler::Handler,
+    handler::{GenericHandler, IntoNonGenericHandler},
+    Route,
+};
 
 pub struct Salus {
-    pub routes: Vec<Route>,
+    routes: Vec<Route>,
 }
 
 impl Salus {
@@ -16,12 +20,21 @@ impl Salus {
         Salus { routes: Vec::new() }
     }
 
-    pub fn add_route(&mut self, path: String, method: http::Method, handler: impl Handler) {
+    pub fn add_route<T: 'static>(
+        &mut self,
+        path: &str,
+        method: http::Method,
+        handler: impl GenericHandler<T> + 'static,
+    ) {
         self.routes.push(Route {
-            path,
+            path: path.into(),
             method,
-            handler: Box::new(handler),
+            handler: Box::new(IntoNonGenericHandler::new(handler)),
         });
+    }
+
+    pub fn routes(&self) -> &[Route] {
+        &self.routes
     }
 
     async fn handle(&self, req: Request<Body>) -> Result<Response<Body>, Infallible> {
@@ -32,7 +45,11 @@ impl Salus {
             .iter()
             .find(|route| route.path == path && route.method == req.method())
         {
-            Some(route) => Ok(route.handler.handle().await.into_hyper_response()),
+            Some(route) => Ok(route
+                .handler
+                .handle(&mut req.into())
+                .await
+                .into_hyper_response()),
             None => Ok(Response::new(Body::from("Not found"))),
         }
     }

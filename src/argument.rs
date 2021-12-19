@@ -1,3 +1,5 @@
+//! Types and traits for working with arguments extracted from the request.
+
 use crate::request::Request;
 
 #[async_trait::async_trait]

@@ -1,9 +1,7 @@
-use std::{fmt::format, net::SocketAddr};
-
 use salus::*;
 use serde::{Deserialize, Serialize};
 
-async fn handle() -> String {
+async fn index() -> String {
     "Hello, world!".to_string()
 }
 
@@ -19,23 +17,17 @@ async fn json_hello() -> Json<HelloResponse> {
     .into()
 }
 
-async fn receive_json(Json(input): Json<HelloResponse>) -> String {
-    format!("Hello {}", input.name)
+async fn receive_json(Json(HelloResponse { name }): Json<HelloResponse>) -> String {
+    format!("Hello {}", name)
 }
 
 #[tokio::main]
 async fn main() {
-    use http::Method;
     let mut s = Salus::new();
 
-    s.add_route("/", Method::GET, handle);
-    s.add_route("/json", Method::GET, json_hello);
-    s.add_route("/hello", Method::POST, receive_json);
+    s.get("/", index);
+    s.get("/json", json_hello);
+    s.post("/hello", receive_json);
 
-    for route in s.routes() {
-        println!("{}: {}", route.method, route.path);
-    }
-
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
-    s.serve(addr).await;
+    s.serve("localhost", 8080).await
 }

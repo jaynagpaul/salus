@@ -1,7 +1,7 @@
-use proc_macro::TokenStream;
+// use proc_macro::TokenStream;
 
-mod route;
+// mod route;
 
-fn route(attr: TokenStream, item: TokenStream) -> TokenStream {
-    route::internal_route(attr, item)
-}
+// fn route(attr: TokenStream, item: TokenStream) -> TokenStream {
+//     route::internal_route(attr, item)
+// }

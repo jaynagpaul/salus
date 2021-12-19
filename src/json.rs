@@ -1,5 +1,10 @@
-use crate::{argument::Argument, Responder, Response};
+//! Json handling for Salus.
 
+use http::{HeaderValue, StatusCode};
+
+use crate::{argument::Argument, responder::InternalServerError, Request, Responder, Response};
+
+/// Json `Argument` and `Responder` type
 pub struct Json<T>(pub T);
 
 impl<T> From<T> for Json<T>
@@ -15,13 +20,19 @@ impl<T> Responder for Json<T>
 where
     T: serde::Serialize,
 {
-    fn response(self) -> Response {
-        Response::builder()
-            .status(http::StatusCode::OK)
-            .header("Content-Type", "application/json")
-            .body(serde_json::to_string(&self.0).unwrap().into())
-            .unwrap()
-            .into()
+    fn respond(self, req: &Request) -> Response {
+        let json = match serde_json::to_string(&self.0)
+            .map_err(|e| InternalServerError(format!("Json failed to serialize: {}", e)))
+        {
+            Ok(json) => json,
+            Err(e) => return e.respond(req),
+        };
+
+        let mut resp = Response::new(StatusCode::OK, json);
+        resp.headers_mut()
+            .insert("Content-Type", HeaderValue::from_static("application/json"));
+
+        resp
     }
 }
 

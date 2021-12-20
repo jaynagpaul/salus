@@ -2,7 +2,7 @@ use crate::Salus;
 
 /// Represents an HTTP request.
 pub struct Request<'s> {
-    inner: hyper::Request<hyper::Body>,
+    pub(crate) inner: hyper::Request<hyper::Body>,
     body: Option<String>,
     /// The salus instance that received the request.
     pub salus: &'s Salus,

@@ -7,6 +7,14 @@ use crate::{argument::Argument, responder::InternalServerError, Request, Respond
 /// Json `Argument` and `Responder` type
 pub struct Json<T>(pub T);
 
+impl<T> std::ops::Deref for Json<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 impl<T> From<T> for Json<T>
 where
     T: serde::Serialize,

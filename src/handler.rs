@@ -8,14 +8,14 @@ use async_trait::async_trait;
 
 /// A handler that can be used to respond to requests.
 /// Used internally to dynamic dispatch between different handler types.
-/// Look at `GenericHandler` for the type used in routing to accept function types.
+/// Look at GenericHandler for the type used in routing to accept function types.
 #[async_trait]
 pub trait Handler: Send + Sync {
     /// Handle a request, returning a response.
     async fn handle(&self, req: &mut Request) -> Response;
 }
 
-/// Wrapper type to convert a `GenericHandler` into a `Handler`.
+/// Wrapper type to convert a [`GenericHandler`] into a `Handler`.
 /// _marker is used to "utilize" the T generic parameter, a workaround for not being able to
 /// use a generic parameter solely to restrict the type of the `GenericHandler` trait.
 pub(crate) struct IntoNonGenericHandler<H, T> {

@@ -12,6 +12,7 @@ mod responder;
 mod response;
 mod route;
 mod salus;
+mod state;
 
 pub use crate::salus::*;
 pub use handler::Handler;
@@ -20,6 +21,7 @@ pub use request::Request;
 pub use responder::Responder;
 pub use response::Response;
 pub use route::Route;
+pub use state::State;
 
 /// An attribute macro for defining an async trait
 pub use async_trait::async_trait;

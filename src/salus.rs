@@ -11,13 +11,15 @@ use hyper::{
 
 use crate::{
     handler::{GenericHandler, IntoNonGenericHandler},
-    Request, Route,
+    state::StateMap,
+    Request, Route, State,
 };
 
 /// The `Salus` struct is the main entry point of the library,
 /// represents a server instance.
 pub struct Salus {
     routes: Vec<Route>,
+    pub(crate) state_map: StateMap,
 }
 
 macro_rules! route_builder {
@@ -35,7 +37,10 @@ impl Salus {
     #[must_use]
     /// Creates a new Salus instance.
     pub fn new() -> Salus {
-        Salus { routes: Vec::new() }
+        Salus {
+            routes: Vec::new(),
+            state_map: StateMap::new(),
+        }
     }
 
     route_builder!(get, GET);
@@ -130,6 +135,14 @@ impl Salus {
 
         println!();
         println!("To stop the server, press Ctrl+C");
+    }
+
+    /// Manage the state
+    pub fn manage<T>(&mut self, state: T)
+    where
+        T: Send + Sync + 'static,
+    {
+        self.state_map.insert(State::new(state));
     }
 }
 

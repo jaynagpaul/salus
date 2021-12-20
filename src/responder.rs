@@ -37,6 +37,16 @@ where
     }
 }
 
+impl<T: Responder> Responder for Option<T> {
+    // TODO: implement 404 catcher
+    fn respond(self, req: &Request) -> Response {
+        match self {
+            Some(t) => t.respond(req),
+            None => Response::new(StatusCode::NOT_FOUND, "Optional Not Found"),
+        }
+    }
+}
+
 impl Responder for String {
     fn respond(self, _: &Request) -> Response {
         Response::new(StatusCode::OK, self)

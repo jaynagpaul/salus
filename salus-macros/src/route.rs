@@ -1,26 +1,32 @@
-// use proc_macro::TokenStream;
-// use quote::{quote, ToTokens};
-// use syn::{parse_macro_input, ItemFn};
+use proc_macro::TokenStream;
+use quote::{quote, ToTokens};
+use syn::{parse_macro_input, Ident, ItemFn, LitStr};
 
-// pub fn internal_route(attr: TokenStream, item: TokenStream) -> TokenStream {
-//     let func = parse_macro_input!(item as ItemFn);
+pub fn internal_route(
+    method: proc_macro2::TokenStream,
+    attr: TokenStream,
+    item: TokenStream,
+) -> TokenStream {
+    let func = parse_macro_input!(item as ItemFn);
 
-//     let name = func.sig.ident.to_string();
-//     let attr_string = attr.to_string();
-//     let (method, path) = attr_string.split_once(" ").unwrap();
-//     let route_impl = quote! {
-//         struct #name;
+    let name = &func.sig.ident;
+    let vis = &func.vis;
+    let path = parse_macro_input!(attr as LitStr);
 
-//         impl salus::StaticRoute for #name {
-//             fn method() -> salus::http::Method {
-//                 salus::http::Method::#method
-//             }
+    quote! {
+        #vis struct #name {}
 
-//             fn path() -> String {
-//                 #path
-//             }
-//         }
-//     };
+        impl salus::StaticRoute for #name {
+            fn into(self) -> salus::Route {
+                salus::Route {
+                    path: #path.into(),
+                    method: salus::http::Method::#method,
+                    handler: Box::new(salus::_private::IntoNonGenericHandler::new(#name)),
+                }
+            }
+        }
 
-//     route_impl.into()
-// }
+        #func
+    }
+    .into()
+}

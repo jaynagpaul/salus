@@ -20,7 +20,15 @@ impl StateMap {
 
     // Insert a new value based on the TypeId of the value
     pub fn insert<T: Send + Sync + 'static>(&mut self, val: T) {
-        self.map.insert(TypeId::of::<T>(), Box::new(val));
+        if self.get::<T>().is_some() {
+            panic!(
+                "State of type `{}` already being managed by this Salus instance",
+                std::any::type_name::<T>()
+            );
+        }
+
+        let key = TypeId::of::<T>();
+        self.map.insert(key, Box::new(val));
     }
 
     // Get a value from the map with the given type.

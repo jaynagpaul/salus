@@ -27,3 +27,8 @@ pub use state::State;
 pub use async_trait::async_trait;
 /// HTTP Types and Traits
 pub use http;
+pub use salus_macros::*;
+
+pub mod _private {
+    pub use crate::handler::IntoNonGenericHandler;
+}

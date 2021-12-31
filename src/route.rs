@@ -6,7 +6,7 @@ pub struct Route {
 
     /// HTTP method of the route
     pub method: http::Method,
-    pub(crate) handler: Box<dyn Handler>,
+    pub handler: Box<dyn Handler>,
 }
 
 impl Route {

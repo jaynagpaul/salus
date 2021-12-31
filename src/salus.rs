@@ -144,6 +144,15 @@ impl Salus {
     {
         self.state_map.insert(State::new(state));
     }
+
+    pub fn add(&mut self, route: impl StaticRoute) {
+        self.routes.push(route.into());
+    }
+}
+
+//TODO: refactor or move me out
+pub trait StaticRoute {
+    fn into(self) -> Route;
 }
 
 /// Possible errors that can occure from `Salus::serve`.
@@ -171,5 +180,52 @@ impl From<hyper::Error> for Error {
 impl Default for Salus {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic]
+    fn manage_two_states_of_same_type() {
+        let mut salus = Salus::new();
+
+        struct State();
+
+        salus.manage(State());
+        salus.manage(State());
+    }
+
+    #[tokio::test]
+    async fn test_serve_with_state() {
+        use std::sync::Mutex;
+        let mut salus = Salus::new();
+
+        struct Counter(Mutex<u32>);
+
+        salus.manage(Counter(Mutex::new(0)));
+
+        salus.get("/", |s: State<Counter>| async move {
+            let mut counter = s.0.lock().unwrap();
+
+            *counter += 1;
+            format!("Counter is {}", counter)
+        });
+
+        let handle = tokio::spawn(salus.serve("localhost", 8080));
+
+        let mut client = reqwest::Client::new();
+
+        let res = client.get("http://localhost:8080/").send().await.unwrap();
+
+        assert_eq!(res.text().await.unwrap(), "Counter is 1");
+
+        let res = client.get("http://localhost:8080/").send().await.unwrap();
+
+        assert_eq!(res.text().await.unwrap(), "Counter is 2");
+
+        handle.abort(); // Stop the server
     }
 }

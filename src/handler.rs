@@ -18,13 +18,13 @@ pub trait Handler: Send + Sync {
 /// Wrapper type to convert a [`GenericHandler`] into a `Handler`.
 /// _marker is used to "utilize" the T generic parameter, a workaround for not being able to
 /// use a generic parameter solely to restrict the type of the `GenericHandler` trait.
-pub(crate) struct IntoNonGenericHandler<H, T> {
+pub struct IntoNonGenericHandler<H, T> {
     handler: H,
     _marker: PhantomData<fn() -> T>,
 }
 
 impl<H, T> IntoNonGenericHandler<H, T> {
-    pub(crate) fn new(handler: H) -> Self {
+    pub fn new(handler: H) -> Self {
         Self {
             handler,
             _marker: PhantomData,
@@ -66,7 +66,7 @@ where
     }
 }
 
-/// A handler impl for a synchronous function with no input.
+/// A handler impl for a asynchronous function with no input.
 #[async_trait]
 impl<F: 'static, Fut, R: Responder> GenericHandler<()> for F
 where
@@ -77,3 +77,22 @@ where
         Responder::respond(self().await, req)
     }
 }
+
+// TODO: is there a better way to represent this?
+// We could to switch to a macro a la Rocket and only implment Handler for fn(req) -> resp
+// Benefits of this approach is that we can use borrowed types as function arguments
+// i.e fn(headers: &HeaderMap) -> resp
+// No way to represent this simply currently
+
+// pub struct Dummy;
+
+// /// A handler impl for a synchronous function with no input.
+// #[async_trait]
+// impl<F: 'static, R: Responder> GenericHandler<Dummy> for F
+// where
+//     F: Send + Sync + Fn() -> R,
+// {
+//     async fn handle(&self, req: &mut Request) -> Response {
+//         Responder::respond(self(), req)
+//     }
+// }

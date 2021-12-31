@@ -58,3 +58,48 @@ where
         serde_json::from_str(body).map(Json).ok()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use serde::Serialize;
+
+    use crate::*;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn test_json_responder() {
+        let mut salus = Salus::new();
+
+        #[derive(Serialize)]
+        struct Response {
+            name: String,
+        };
+
+        async fn handler() -> Json<Response> {
+            let name = "Jay".to_string();
+
+            Response { name }.into()
+        }
+
+        salus.get("/", handler);
+
+        let handle = tokio::spawn(salus.serve("localhost", 8080));
+
+        let mut client = reqwest::Client::new();
+        let res = client
+            .get("http://localhost:8080/")
+            .header("Content-Type", "application/json")
+            .send()
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::OK);
+
+        let body = res.text().await.unwrap();
+
+        assert_eq!(body.trim(), r#"{"name":"Jay"}"#);
+
+        handle.abort();
+    }
+}
